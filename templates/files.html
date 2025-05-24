@@ -131,8 +131,9 @@
 
 <!-- Chart.js & Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='SeverityChart/Piechart.js') }}"></script>
 <script src="{{ url_for('static', filename='SeverityChart/severityChart.js') }}"></script>
-<script src="{{ url_for('static', filename='SeverityChart/PieChart.js') }}"></script>
+
 
 {% else %}
 <p class="text-center mt-4">Please select a year and quarter to view the report.</p>
