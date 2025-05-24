@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // if (typeof productVulnerabilityData !== 'undefined' && Object.keys(productVulnerabilityData).length > 0) {
-    if (typeof productVulnerabilityData !== 'undefined') {
+     console.log("PieChart.js loaded");
+     console.log("productVulnerabilityData:", productVulnerabilityData);
+     
+    if (typeof productVulnerabilityData !== 'undefined' && Object.keys(productVulnerabilityData).length > 0) {
+    // if (typeof productVulnerabilityData !== 'undefined') {
         const ctx = document.getElementById('productVulnerabilityPieChart').getContext('2d');
 
         const labels = Object.keys(productVulnerabilityData);
