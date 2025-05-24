@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Vulnerability Intelligence Platform{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Reports</h1>
+<p class="text-center">Welcome to the Reports section</p>
+
+<!-- Year Dropdown -->
+<div class="row justify-content-center mb-4">
+    <div class="col-auto">
+        <div class="dropdown">
+            <button class="btn btn-secondary yrbtn dropdown-toggle wider-button"
+                    type="button"
+                    id="yearDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                {{ selected_year if selected_year else "Select Year" }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="yearDropdown" id="yearList">
+                {% for year in years %}
+                <li>
+                    <a class="dropdown-item {% if year == selected_year %}active{% endif %}"
+                       href="{{ url_for('files_by_year', year=year) }}">
+                        {{ year }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Quarter Dropdown -->
+{% if selected_year %}
+<div class="row justify-content-center mb-4">
+    <div class="col-auto">
+        <div class="dropdown">
+            <button class="btn btn-secondary yrbtn dropdown-toggle wider-button"
+                    type="button"
+                    id="quarterDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                {{ selected_quarter if selected_quarter else "Select Quarter" }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="quarterDropdown" id="quarterList">
+                {% for quarter in quarters %}
+                <li>
+                    <a class="dropdown-item {% if quarter == selected_quarter %}active{% endif %}"
+                       href="{{ url_for('files_by_quarter', year=selected_year, quarter=quarter) }}">
+                        {{ quarter }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Table & Charts -->
+{% if selected_quarter %}
+<div class="table-responsive mb-5">
+    <table class="table table-striped table-hover table-sortable" id="vulnTable">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Product Version</th>
+                <th>Vulnerabilities</th>
+                <th>Last Modified</th>
+                <th>Qualys Version</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for file in files %}
+            <tr class="clickable-row"
+                data-bs-toggle="modal"
+                data-bs-target="#vulnModal"
+                data-name="{{ file.product_name }}"
+                data-version="{{ file.product_build }}"
+                data-count="{{ file.vulnerability_count }}"
+                data-modified="{{ file.last_modified.strftime('%m-%d-%Y') }}"
+                data-qualys="{{ file.qualys_version }}"
+                data-status="{{ file.status }}"
+                data-severity='{{ file.severity_counts | tojson }}'>
+                <td>{{ file.product_name }}</td>
+                <td>{{ file.product_build }}</td>
+                <td>{{ file.vulnerability_count }}</td>
+                <td>{{ file.last_modified.strftime('%m-%d-%Y') }}</td>
+                <td>{{ file.qualys_version }}</td>
+                <td>
+                    <span class="badge {% if file.status.lower() == 'resolved' %}bg-success{% else %}bg-danger{% endif %}">
+                        {{ file.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ file.url }}"
+                       class="btn btn-primary btn-sm"
+                       download="{{ file.name }}"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <i class="bi bi-download"></i> Download
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Severity Chart -->
+<div class="container mb-5 mt-4">
+    <div class="row">  <!-- Bootstrap row -->
+        <div class="col-md-4"> 
+            <canvas id="productVulnerabilityPieChart" style="width:100%; height:300px;"></canvas>
+        </div>
+        <div class="col-md-8">  
+            <canvas id="vulnerabilitySeverityChart" style="width:100%; height:400px;"></canvas>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Product Pie Chart (Main Page Only) -->
+<!-- <div class="container mb-5 mt-4">
+    <canvas id="productVulnerabilityPieChart" style="max-width:600px; width:100%; margin: 0 auto;"></canvas>
+</div> -->
+
+<!-- Pass data to JS -->
+<script>
+    var severityTotals = {{ severity_totals | tojson }};
+    var productVulnerabilityData = {{ product_totals | tojson }};
+</script>
+
+<!-- Chart.js & Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='SeverityChart/severityChart.js') }}"></script>
+<script src="{{ url_for('static', filename='SeverityChart/PieChart.js') }}"></script>
+
+{% else %}
+<p class="text-center mt-4">Please select a year and quarter to view the report.</p>
+{% endif %}
+
+<!-- Modal -->
+<div class="modal fade" id="vulnModal" tabindex="-1" aria-labelledby="vulnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vulnerability Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Product Name:</strong> <span id="modalProductName"></span></p>
+                <p><strong>Version:</strong> <span id="modalVersion"></span></p>
+                <p><strong>Vulnerability Count:</strong> <span id="modalCount"></span></p>
+                <p><strong>Last Modified:</strong> <span id="modalModified"></span></p>
+                <p><strong>Qualys Version:</strong> <span id="modalQualys"></span></p>
+                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+
+                <div style="display: flex; justify-content: center; align-items: center;">
+                    <canvas id="modalSeverityChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chart Script -->
+<script>
+    let modalChart;
+
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', () => {
+            document.getElementById('modalProductName').textContent = row.dataset.name;
+            document.getElementById('modalVersion').textContent = row.dataset.version;
+            document.getElementById('modalCount').textContent = row.dataset.count;
+            document.getElementById('modalModified').textContent = row.dataset.modified;
+            document.getElementById('modalQualys').textContent = row.dataset.qualys;
+            document.getElementById('modalStatus').textContent = row.dataset.status;
+
+            const severityData = JSON.parse(row.dataset.severity || '{}');
+            const labels = Object.keys(severityData);
+            const data = Object.values(severityData);
+
+            if (modalChart) {
+                modalChart.destroy();
+            }
+
+            const ctx = document.getElementById('modalSeverityChart').getContext('2d');
+            modalChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Severity Count',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(255, 159, 64, 0.7)',
+                            'rgba(255, 205, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(54, 162, 235, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: 'Vulnerability Distribution by Severity Level',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Severity Level',
+                                font: { weight: 'bold' }
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 },
+                            title: {
+                                display: true,
+                                text: 'Number of Vulnerabilities',
+                                font: { weight: 'bold' }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
