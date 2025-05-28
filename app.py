@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,redirect, url_for, flash, session
 import boto3
 from config import S3_BUCKET, S3_KEY, S3_SECRET
 from botocore.client import Config
 import csv
 
 app = Flask(__name__)
+app.secret_key = 'Vulnerability'  # used to encrypt session data
 
 s3_client = boto3.client(
     's3',
@@ -35,8 +36,12 @@ def count_vulnerabilities(csv_content):
 def extract_scanner_version(csv_content):
     reader = csv.reader(csv_content.splitlines())
     for row in reader:
-        if len(row) > 6 and row[0].startswith('03/') and "Scanner" in row[6]:
-            return row[6].split("Scanner ")[1].split(",")[0].strip()
+        for cell in row:
+            if "Scanner" in cell and "Scanner Appliance" not in cell:
+                scanner_part = cell.split("Scanner ")[1]
+                print(scanner_part)
+                version = scanner_part.split(",")[0].strip()
+                return version
     return "Not found"
 
 def extract_severity_counts(csv_content):
@@ -67,14 +72,37 @@ def extract_severity_counts(csv_content):
 def index():
     return render_template('index.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username == 'array' and password == 'admin':
+            session['logged_in'] = True
+            return redirect(url_for('files'))
+        else:
+            flash('Invalid username or password. Try Again!')
+            return render_template('login.html')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('You were logged out')
+    return redirect(url_for('login'))
+
 @app.route('/files')
 def files():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Delimiter='/')
     year_prefixes = [prefix['Prefix'].rstrip('/') for prefix in response.get('CommonPrefixes', [])]
     return render_template('files.html', years=year_prefixes, selected_year=None, files=[])
 
 @app.route('/files/<year>')
 def files_by_year(year):
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     response = s3_client.list_objects_v2(Bucket=S3_BUCKET, Delimiter='/')
     year_prefixes = [prefix['Prefix'].rstrip('/') for prefix in response.get('CommonPrefixes', [])]
     return render_template('files.html', years=year_prefixes, selected_year=year, quarters=['Q1', 'Q2', 'Q3', 'Q4'], files=[])
