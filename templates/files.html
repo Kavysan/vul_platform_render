@@ -2,15 +2,86 @@
 
 {% block title %}Reports - Vulnerability Intelligence Platform{% endblock %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/files.css') }}">
+{% endblock %}
+
 {% block content %}
 <h1 class="text-center mb-4">Reports</h1>
 <p class="text-center">Welcome to the Reports section</p>
 
-<!-- Year Dropdown -->
+{% if selected_year %}
+<div class="row justify-content-center mb-4">
+    <div class="col-auto">
+        <div class="d-flex gap-3"> 
+            
+            <!-- Year Dropdown -->
+            <div class="dropdown">
+                <button class="btn yrbtn dropdown-toggle wider-button"
+                        type="button"
+                        id="yearDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        style="background-color: orange; 
+                            color: white; 
+                            border-radius: 8px; 
+                            padding: 10px 20px; 
+                            font-weight: 500; 
+                            font-size: 16px; 
+                            border: none;
+                            width:300px">
+                    {{ selected_year if selected_year else "Select Year" }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="yearDropdown" id="yearList">
+                    {% for year in years %}
+                    <li>
+                        <a class="dropdown-item {% if year == selected_year %}active{% endif %}"
+                           href="{{ url_for('files_by_year', year=year) }}">
+                            {{ year }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Quarter Dropdown -->
+            <div class="dropdown">
+                <button class="btn yrbtn dropdown-toggle wider-button"
+                        type="button"
+                        id="quarterDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        style="background-color: orange;
+                            color: white; 
+                            border-radius: 8px; 
+                            padding: 10px 20px; 
+                            font-weight: 500; 
+                            font-size: 16px; 
+                            border: none;
+                            width:300px">
+                    {{ selected_quarter if selected_quarter else "Select Quarter" }}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="quarterDropdown" id="quarterList">
+                    {% for quarter in quarters %}
+                    <li>
+                        <a class="dropdown-item {% if quarter == selected_quarter %}active{% endif %}"
+                           href="{{ url_for('files_by_quarter', year=selected_year, quarter=quarter) }}">
+                            {{ quarter }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- If no year selected, show only year dropdown -->
 <div class="row justify-content-center mb-4">
     <div class="col-auto">
         <div class="dropdown">
-            <button class="btn btn-secondary yrbtn dropdown-toggle wider-button"
+            <button class="btn yrbtn dropdown-toggle wider-button"
                     type="button"
                     id="yearDropdown"
                     data-bs-toggle="dropdown"
@@ -30,33 +101,8 @@
         </div>
     </div>
 </div>
-
-<!-- Quarter Dropdown -->
-{% if selected_year %}
-<div class="row justify-content-center mb-4">
-    <div class="col-auto">
-        <div class="dropdown">
-            <button class="btn btn-secondary yrbtn dropdown-toggle wider-button"
-                    type="button"
-                    id="quarterDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                {{ selected_quarter if selected_quarter else "Select Quarter" }}
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="quarterDropdown" id="quarterList">
-                {% for quarter in quarters %}
-                <li>
-                    <a class="dropdown-item {% if quarter == selected_quarter %}active{% endif %}"
-                       href="{{ url_for('files_by_quarter', year=selected_year, quarter=quarter) }}">
-                        {{ quarter }}
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-</div>
 {% endif %}
+
 
 <!-- Table & Charts -->
 {% if selected_quarter %}

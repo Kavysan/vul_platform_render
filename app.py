@@ -5,7 +5,7 @@ from botocore.client import Config
 import csv
 
 app = Flask(__name__)
-app.secret_key = 'Vulnerability'  # used to encrypt session data
+app.secret_key = 'Vulnerability' 
 
 s3_client = boto3.client(
     's3',

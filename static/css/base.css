@@ -1,0 +1,55 @@
+
+.navbar {
+    background: linear-gradient(
+        to right,
+        rgba(244, 242, 240, 0.9),
+        orange,
+        rgba(244, 242, 240, 0.9)
+    );
+    padding: 0.5rem 1rem;
+    height: 75px;
+}
+.navbar-brand img {
+    max-width: 150px;
+    height: auto;
+}
+.nav-link {
+    color: orange !important;
+    font-weight: 500;
+}
+.nav-link.active {
+    color: orange !important;
+}
+
+.nav-link:hover {
+    text-decoration: underline !important;
+    text-decoration-thickness: 5px;
+    text-underline-offset: 4px;
+    color: orangered !important;
+    transform: translateY(-2px);
+}
+
+.orange-bar {
+    background: linear-gradient(
+        to right,
+        rgba(244, 242, 240, 0.9),
+        orange,
+        rgba(244, 242, 240, 0.9)
+    );
+}
+
+.vul-title {
+    margin-top: 10px;
+}
+
+
+.vertical-line {
+    border-left: 2px solid #e7eaed;
+    height: 100%;
+    margin: 0 auto;
+}
+
+.offer {
+    background-color: rgb(249, 247, 244);
+}
+
