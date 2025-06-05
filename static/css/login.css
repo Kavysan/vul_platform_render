@@ -52,7 +52,7 @@
 }
 
 .login-btn {
-    background-color: orange;
+    background-color: orange!important;
     border: none;
     font-weight: 600;
     color: white;
