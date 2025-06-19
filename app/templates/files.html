@@ -36,7 +36,7 @@
                     {% for year in years %}
                     <li>
                         <a class="dropdown-item {% if year == selected_year %}active{% endif %}"
-                           href="{{ url_for('files_by_year', year=year) }}">
+                           href="{{ url_for('api.files_by_year', year=year) }}">
                             {{ year }}
                         </a>
                     </li>
@@ -65,7 +65,7 @@
                     {% for quarter in quarters %}
                     <li>
                         <a class="dropdown-item {% if quarter == selected_quarter %}active{% endif %}"
-                           href="{{ url_for('files_by_quarter', year=selected_year, quarter=quarter) }}">
+                           href="{{ url_for('api.files_by_quarter', year=selected_year, quarter=quarter) }}">
                             {{ quarter }}
                         </a>
                     </li>
@@ -92,7 +92,7 @@
                 {% for year in years %}
                 <li>
                     <a class="dropdown-item {% if year == selected_year %}active{% endif %}"
-                       href="{{ url_for('files_by_year', year=year) }}">
+                       href="{{ url_for('api.files_by_year', year=year) }}">
                         {{ year }}
                     </a>
                 </li>
@@ -131,25 +131,45 @@
                 data-qualys="{{ file.qualys_version }}"
                 data-status="{{ file.status }}"
                 data-severity='{{ file.severity_counts | tojson }}'>
-                <td>{{ file.product_name }}</td>
-                <td>{{ file.product_build }}</td>
-                <td>{{ file.vulnerability_count }}</td>
-                <td>{{ file.last_modified.strftime('%m-%d-%Y') }}</td>
-                <td>{{ file.qualys_version }}</td>
-                <td>
-                    <span class="badge {% if file.status.lower() == 'resolved' %}bg-success{% else %}bg-danger{% endif %}">
-                        {{ file.status }}
-                    </span>
-                </td>
-                <td>
+            <td>{{ file.product_name }}</td>
+            <td>{{ file.product_build }}</td>
+            <td>{{ file.vulnerability_count }}</td>
+            <td>{{ file.last_modified.strftime('%m-%d-%Y') }}</td>
+            <td>{{ file.qualys_version }}</td>
+            <td>
+                <span class="badge {% if file.status.lower() == 'resolved' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ file.status }}
+                </span>
+            </td>
+            <td>
+                {% if user_role == 'RD' %}
+                <a href="{{ file.url }}"
+                    class="btn btn-primary btn-sm"
+                    download="{{ file.name }}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <i class="bi bi-download"></i> Download
+                </a>
+                {% elif user_role == 'PM' %}
+                {% if file.status.lower() == 'resolved' %}
                     <a href="{{ file.url }}"
-                       class="btn btn-primary btn-sm"
-                       download="{{ file.name }}"
-                       target="_blank"
-                       rel="noopener noreferrer">
-                        <i class="bi bi-download"></i> Download
+                    class="btn btn-primary btn-sm"
+                    download="{{ file.name }}"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    <i class="bi bi-download"></i> Download
                     </a>
-                </td>
+                {% else %}
+                    <button class="btn btn-secondary btn-sm" disabled title="Download restricted for Pending reports">
+                    <i class="bi bi-download"></i> Download
+                    </button>
+                {% endif %}
+                {% else %}
+                <button class="btn btn-secondary btn-sm" disabled title="Download not permitted">
+                    <i class="bi bi-download"></i> Download
+                </button>
+                {% endif %}
+            </td>
             </tr>
             {% endfor %}
         </tbody>
