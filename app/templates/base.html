@@ -30,7 +30,11 @@
                     <li class="nav-item">
                         <a class="nav-link {{ 'active' if request.endpoint == 'files' }} p-5" href="{{ url_for('api.files') }}">Reports</a>
                     </li>
-
+                    {% if session.get('user_role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link p-5" href="{{ url_for('auth.admin_dashboard') }}">Admin</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
