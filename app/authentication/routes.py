@@ -72,12 +72,10 @@ def add_user():
 def delete_user(user_id):
     user = User.query.get_or_404(user_id)
 
-    # Prevent deleting admin users
     if user.role == 'admin':
         flash("You cannot delete an admin user.", "warning")
         return redirect(url_for('auth.admin_dashboard'))
 
-    # Optional: Prevent admin deleting their own account
     if user.email == session.get('user_email'):
         flash("You cannot delete your own admin account.", "warning")
         return redirect(url_for('auth.admin_dashboard'))
@@ -86,3 +84,22 @@ def delete_user(user_id):
     db.session.commit()
     flash(f"User '{user.email}' deleted successfully.", "success")
     return redirect(url_for('auth.admin_dashboard'))
+
+@auth.route('/admin/update_password/<user_id>', methods=['GET', 'POST'])
+@admin_required
+def update_password(user_id):
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        new_password = request.form.get('new_password')
+        if not new_password:
+            flash('Password cannot be empty.', 'warning')
+            return redirect(url_for('auth.update_password', user_id=user_id))
+
+        hashed_pw = generate_password_hash(new_password)
+        user.password = hashed_pw
+        db.session.commit()
+        flash(f"Password updated for '{user.email}'.", 'success')
+        return redirect(url_for('auth.admin_dashboard'))
+
+    return render_template('update_password.html', user=user)

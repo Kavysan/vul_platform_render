@@ -20,14 +20,19 @@
         <td>{{ user.email }}</td>
         <td>{{ user.role }}</td>
         <td>
-          {% if user.role != 'admin' %}
-          <form method="POST" action="{{ url_for('auth.delete_user', user_id=user.id) }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
+        {% if user.role != 'admin' %}
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('auth.delete_user', user_id=user.id) }}" onsubmit="return confirm('Are you sure you want to delete this user?');">
             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-          </form>
-          {% else %}
+            </form>
+            <a href="{{ url_for('auth.update_password', user_id=user.id) }}" class="btn btn-warning btn-sm">Update Password</a>
+        </div>
+        {% else %}
             <em>Admin</em>
-          {% endif %}
+        {% endif %}
         </td>
+
+
       </tr>
     {% endfor %}
   </tbody>
